@@ -3,40 +3,32 @@ package org.couchbase;
 import com.couchbase.client.java.*;
 import com.couchbase.client.java.json.JsonArray;
 import com.couchbase.client.java.json.JsonObject;
-import com.couchbase.client.java.kv.GetResult;
 import reactor.core.publisher.Flux;
 
-import com.couchbase.client.core.error.CouchbaseException;
 import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.json.JsonObject;
-import com.couchbase.client.java.kv.GetResult;
 import com.couchbase.client.java.kv.MutationResult;
-import com.couchbase.client.java.kv.UpsertOptions;
-import com.couchbase.client.java.query.QueryOptions;
-import com.couchbase.client.java.query.QueryResult;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.json.JsonObject;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 
 /**
  * This class demonstrates how to perform multiple key-value inserts and reads within a single transaction using Couchbase Java SDK.
  */
 public class Main {
-
-    private static final String CONNECTION_STRING = "couchbases://cb.bgzm40pdb7nphef.cloud.couchbase.com";
+//Capella Connection
+   /* private static final String CONNECTION_STRING = "couchbases://cb.bgzm40pdb7nphef.cloud.couchbase.com";
     private static final String USERNAME = "abhijeet";
-    private static final String PASSWORD = "Password@P1";
+    private static final String PASSWORD = "Password@P1";*/
+
+    private static final String CONNECTION_STRING = "couchbase://ec2-3-143-153-43.us-east-2.compute.amazonaws.com";
+    private static final String USERNAME = "Administrator";
+    private static final String PASSWORD = "password";
     private static final String BUCKET = "occ";
     private static final String SCOPE = "_default";
     private static final String COLLECTION = "_default";
@@ -60,15 +52,12 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        List<JsonObject> data = generateData();
+        List<JsonObject> data = generateDBDealDataListOfDocuments();
 
         // Capture the start time
         long startTime = System.currentTimeMillis();
 
-        // TODO: Simulate the transaction process
-//        simulateTransaction(collection);
-
-        List<MutationResult> result = bulkInsert(data);
+        List<MutationResult> result = simulateDbDeal(data);
 
         // Capture the end time
         long endTime = System.currentTimeMillis();
@@ -81,122 +70,113 @@ public class Main {
         cluster.disconnect();
     }
 
-    private static void simulateTransaction(Collection collection) {
-        // Iterate through the provided JSON data and perform corresponding Couchbase operations
-        simulateDbDeal(collection);
-        simulateTrades(collection);
-        simulatePositions(collection);
-        // Add other collections as needed
-
-        // Commit or rollback the transaction based on your business logic
-        // For simplicity, we'll assume the transaction is always successful
-        System.out.println("Transaction committed successfully.");
-    }
-
-    private static void simulateDbDeal(Collection collection) {
-        // Sample data for DbDeal
-        JsonObject dbDealData = JsonObject.fromJson("{" +
-                "\"action\":\"CREATE\"," +
-                "\"collection\":\"DbDeal\"," +
-                "\"entity\":{...}," +
-                "\"key\":\"24325637\"" +
-                "}");
-
-        // Perform the Couchbase operation for DbDeal
-        collection.upsert("DbDeal::24325637", dbDealData);
-    }
-
-    private static void simulateTrades(Collection collection) {
-        // Sample data for TRADES
-        JsonObject tradesData = JsonObject.fromJson("{" +
-                "\"action\":\"CREATE\"," +
-                "\"collection\":\"TRADES\"," +
-                "\"entity\":{...}," +
-                "\"key\":\"49151493\"" +
-                "}");
-
-        // Perform the Couchbase operation for TRADES
-        collection.upsert("TRADES::49151493", tradesData);
-        // Repeat for other TRADES data as needed
-    }
-
-    private static void simulatePositions(Collection collection) {
-        // Sample data for POSITION
-        JsonObject positionData = JsonObject.fromJson("{" +
-                "\"action\":\"CREATE\"," +
-                "\"collection\":\"POSITIONS\"," +
-                "\"entity\":{...}," +
-                "\"key\":\"POSITIONS::1460054::71\"" +
-                "}");
-
-        // Perform the Couchbase operation for POSITION
-        collection.upsert("POSITIONS::1460054::71", positionData);
-        // Repeat for other POSITION data as needed
-    }
-
-    // Add similar methods for other collections as needed
-
-    private static List<MutationResult> bulkInsert(List<JsonObject> data) {
+    private static List<MutationResult> simulateDbDeal(List<JsonObject> data) {
 
         return Flux.fromIterable(data)
-                .flatMap(doc -> collection.reactive().upsert(doc.getString("MessageId"),doc))
+                .flatMap(doc -> collection.reactive().upsert(doc.getString("key"),doc))
                 .doOnError(e -> Flux.empty())
                 .collectList()
                 .block();
     }
 
-
-    public static List<JsonObject> generateData() {
+    public static List<JsonObject> generateDBDealDataListOfDocuments() {
 
         return Flux.range(0, 30)
-                .map(i -> generateMockData(i))
+                .map(i -> generateDBDealJSONData(i))
                 .doOnError(e -> Flux.empty())
                 .collectList()
                 .block();
     }
 
-    private static JsonObject generateMockData(int index) {
+    private static JsonObject generateDBDealJSONData(int index) {
         Random random = new Random();
 
-        JsonObject jsonData = JsonObject.from(new LinkedHashMap<>());
+        JsonObject jsonData = JsonObject.create();
 
-        jsonData.put("MessageId", UUID.randomUUID().toString());
-        jsonData.put("DeviceId", "vehicle" + random.nextInt(100));
-        jsonData.put("EventTime", Instant.now().toString());
+        jsonData.put("action", "CREATE");
+        jsonData.put("collection", "DbDeal");
 
-        // Orgs represented as an array of objects
-        JsonArray orgsArray = JsonArray.from("org1" + random.nextInt(1000), "org2" + random.nextInt(1000));
-        jsonData.put("Orgs", orgsArray);
+        JsonObject entity = JsonObject.create();
+        entity.put("sellTradeId", "49151749");
+        entity.put("dealId", "24325637");
 
-        JsonObject payload = JsonObject.from(new LinkedHashMap<>());
+        // Mocking "buy" section
+        JsonObject buy = JsonObject.create();
+        buy.put("allocation", createAllocationData(random));
+        entity.put("buy", buy);
 
-        JsonObject telematics = JsonObject.from(new LinkedHashMap<>());
-        telematics.put("vehicleId", "ABC" + random.nextInt(1000));
+        entity.put("transactionTime", Instant.now().toString());
+        entity.put("entryTxnId", "24325637");
+        entity.put("isBackedOutBusted", false);
+        entity.put("buyTradeId", "49151493");
+        entity.put("price", "99");
 
-        JsonObject location = JsonObject.from(new LinkedHashMap<>());
-        location.put("latitude", 30 + random.nextDouble() * 20);
-        location.put("longitude", -120 + random.nextDouble() * 60);
-        telematics.put("location", location);
+        // Mocking "instrumentSpecificDealData" section
+        JsonObject instrumentSpecificDealData = JsonObject.create();
+        instrumentSpecificDealData.put("$type", "ConfirmationAgreement");
+        entity.put("instrumentSpecificDealData", instrumentSpecificDealData);
 
-        telematics.put("speed", random.nextInt(100));
-        telematics.put("fuelLevel", random.nextInt(100));
-        telematics.put("engineStatus", random.nextBoolean() ? "running" : "stopped");
+        // Mocking "tradeSequenceNumbers" section
+        JsonArray tradeSequenceNumbers = JsonArray.from("48651269", "48651525");
+        entity.put("tradeSequenceNumbers", tradeSequenceNumbers);
 
-        JsonObject tirePressure = JsonObject.from(new LinkedHashMap<>());
-        tirePressure.put("frontLeft", 28 + random.nextInt(10));
-        tirePressure.put("frontRight", 28 + random.nextInt(10));
-        tirePressure.put("rearLeft", 28 + random.nextInt(10));
-        tirePressure.put("rearRight", 28 + random.nextInt(10));
-        telematics.put("tirePressure", tirePressure);
+        entity.put("tradeBusinessDate", "2018-02-01");
+        entity.put("timestamp", Instant.now().toString());
+        entity.put("quantity", "50");
 
-        JsonObject driver = JsonObject.from(new LinkedHashMap<>());
-        driver.put("name", "Driver" + random.nextInt(1000));
-        driver.put("licenseNumber", "ABC" + random.nextInt(1000));
-        driver.put("status", random.nextBoolean() ? "active" : "inactive");
-        telematics.put("driver", driver);
-        payload.put("telematics", telematics);
-        jsonData.put("Payload", payload);
+        // Mocking "filterKeys" section
+        JsonObject filterKeys = JsonObject.create();
+        filterKeys.put("nonClearedStructureKey", "0");
+        filterKeys.put("productStructureKey", "144396836679974912");
+        entity.put("filterKeys", filterKeys);
+
+        // Mocking "instrumentKey" section
+        JsonObject instrumentKey = JsonObject.create().put("id", "1460054");
+        entity.put("instrumentKey", instrumentKey);
+
+        // Mocking "sell" section
+        JsonObject sell = JsonObject.create();
+        sell.put("allocation", createAllocationData(random));
+        entity.put("sell", sell);
+
+        entity.put("enteringUser", "RTC_SUPER");
+        entity.put("tradeCurrency", "USD");
+        entity.put("clearingSequenceNumber", "84618645841335");
+        entity.put("$type", "DbDeal");
+        entity.put("wasRejected", false);
+        entity.put("clientDealId", "1756384618645841335");
+        entity.put("asOfDate", "2023-11-20");
+        entity.put("typeOfTrade", "REGULAR");
+        entity.put("dealSource", "6");
+        entity.put("status", "ACTIVE");
+
+        jsonData.put("entity", entity);
+//        jsonData.put("key", "24325637");
+        jsonData.put("key", UUID.randomUUID().toString());
         return jsonData;
+    }
+
+    private static JsonObject createAllocationData(Random random) {
+        JsonObject allocationData = JsonObject.create();
+
+        allocationData.put("quantity", "50");
+        allocationData.put("cmtaFlag", true);
+        allocationData.put("openOrClose", "OPEN");
+        allocationData.put("cmtaName", String.valueOf(random.nextInt(10000)));
+
+        JsonArray defaultReasons = JsonArray.from("MARKET_MAKER_NOT_FOUND", "DEFAULT_AT_TAKEUP");
+        allocationData.put("defaultReasons", defaultReasons);
+
+        allocationData.put("originalCmNumber", String.valueOf(random.nextInt(10000)));
+        allocationData.put("accountId", String.valueOf(random.nextInt(1000)));
+        allocationData.put("cmtaResult", "DEFAULTED_BACK_TO_EXECUTOR");
+        allocationData.put("originalAccountType", "M");
+        allocationData.put("isEnteredOnDefaultAccount", true);
+        allocationData.put("allocationFlag", false);
+        allocationData.put("destinationCmn", String.valueOf(random.nextInt(10000)));
+        allocationData.put("destinationAccount", String.valueOf(random.nextInt(1000)));
+
+        return allocationData;
     }
 }
 
