@@ -10,6 +10,7 @@ import com.couchbase.client.java.kv.MutationResult;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -26,7 +27,10 @@ public class Main {
     private static final String USERNAME = "abhijeet";
     private static final String PASSWORD = "Password@P1";*/
 
-    private static final String CONNECTION_STRING = "couchbase://ec2-3-143-153-43.us-east-2.compute.amazonaws.com";
+//    private static final String CONNECTION_STRING = "couchbase://ec2-3-143-153-43.us-east-2.compute.amazonaws.com";
+
+    // Local
+    private static final String CONNECTION_STRING = "couchbase://localhost";
     private static final String USERNAME = "Administrator";
     private static final String PASSWORD = "password";
     private static final String BUCKET = "occ";
@@ -57,7 +61,18 @@ public class Main {
         // Capture the start time
         long startTime = System.currentTimeMillis();
 
-        List<MutationResult> result = simulateDbDeal(data);
+        // Multiple inserts test
+        // List<MutationResult> result = simulateMultipleDbDeals(data);
+
+        // Simulate transactions for DbDeal
+        JsonObject dbDeal = generateDBDealJSONData();
+        collection.upsert(dbDeal.getString("key"),dbDeal);
+
+        // Simulate reads for DbDeal
+        JsonObject resultDbDeal = collection.get(dbDeal.getString("key")).contentAsObject();
+        System.out.println("Read DbDeal with Key: " + resultDbDeal.getString("key"));
+
+
 
         // Capture the end time
         long endTime = System.currentTimeMillis();
@@ -70,25 +85,26 @@ public class Main {
         cluster.disconnect();
     }
 
-    private static List<MutationResult> simulateDbDeal(List<JsonObject> data) {
+    private static List<MutationResult> simulateMultipleDbDeals(List<JsonObject> data) {
 
         return Flux.fromIterable(data)
                 .flatMap(doc -> collection.reactive().upsert(doc.getString("key"),doc))
                 .doOnError(e -> Flux.empty())
                 .collectList()
                 .block();
+
     }
 
     public static List<JsonObject> generateDBDealDataListOfDocuments() {
 
         return Flux.range(0, 30)
-                .map(i -> generateDBDealJSONData(i))
+                .map(i -> generateDBDealJSONData())
                 .doOnError(e -> Flux.empty())
                 .collectList()
                 .block();
     }
 
-    private static JsonObject generateDBDealJSONData(int index) {
+    private static JsonObject generateDBDealJSONData() {
         Random random = new Random();
 
         JsonObject jsonData = JsonObject.create();
@@ -177,6 +193,92 @@ public class Main {
         allocationData.put("destinationAccount", String.valueOf(random.nextInt(1000)));
 
         return allocationData;
+    }
+
+    // Trades object
+    private static JsonObject generateTradeJSONData() {
+        Random random = new Random();
+        JsonObject trade = JsonObject.create();
+
+        trade.put("remainingQuantity", Integer.toString(random.nextInt(100)));
+        trade.put("reason", "TRADE");
+        trade.put("reservedQuantity", "0");
+        trade.put("originalQuantity", Integer.toString(random.nextInt(100)));
+        trade.put("isExchangeTrade", true);
+        trade.put("transactionTime", "1970-01-20 16:22:24.827");
+        trade.put("hasWarnings", false);
+        trade.put("isBackedOutBusted", false);
+        trade.put("cmtaResult", "SUCCESSFULLY_BOOKED_AT_TAKEUP");
+        trade.put("originalAccountType", "M");
+        trade.put("price", Integer.toString(random.nextInt(100)));
+        trade.put("nextTradeIds", JsonArray.create());
+        trade.put("isEnteredOnDefaultAccount", true);
+
+        // Mocking "instrumentSpecificDealData" section
+        JsonObject instrumentSpecificDealData = JsonObject.create();
+        instrumentSpecificDealData.put("$type", "ConfirmationAgreement");
+        trade.put("instrumentSpecificDealData", instrumentSpecificDealData);
+
+        trade.put("cmtaSuccessful", false);
+        trade.put("destinationCm", Integer.toString(random.nextInt(10000)));
+        trade.put("initialValue", "0");
+        trade.put("premiumPayment", "495000.00");
+        trade.put("tradeBusinessDate", "2018-02-01");
+        trade.put("timestamp", Instant.now().toString());
+        trade.put("previouslyReported", false);
+        trade.put("sequenceNumber", Integer.toString(random.nextInt(100000)));
+        trade.put("cmtaExecutor", Integer.toString(random.nextInt(10000)));
+        trade.put("moveTradeIds", JsonArray.create());
+        trade.put("cmtaFlag", true);
+        trade.put("tradeScenario", "CMTA_VALID");
+        trade.put("openOrClose", "OPEN");
+        trade.put("previousTradeIds", JsonArray.create());
+
+        // Mocking "immutableTradeAttributes" section
+        JsonObject immutableTradeAttributes = JsonObject.create();
+        immutableTradeAttributes.put("isBuy", random.nextBoolean());
+        immutableTradeAttributes.put("filterKeys", createFilterKeys(random));
+        immutableTradeAttributes.put("instrumentKey", createInstrumentKey(random));
+        immutableTradeAttributes.put("dealId", Integer.toString(random.nextInt(100000)));
+        immutableTradeAttributes.put("tradeSourceId", "6");
+        immutableTradeAttributes.put("clientDealId", Long.toString(random.nextLong()));
+        immutableTradeAttributes.put("user", "RTC_SUPER");
+        trade.put("immutableTradeAttributes", immutableTradeAttributes);
+
+        trade.put("isApgTrade", false);
+        trade.put("originalDestinationCm", Integer.toString(random.nextInt(10000)));
+        trade.put("tradeCurrency", "USD");
+        trade.put("clearingSequenceNumber", "84618645841335");
+        trade.put("$type", "DbTrade");
+        trade.put("originalCmNumber", Integer.toString(random.nextInt(10000)));
+        trade.put("accountId", Integer.toString(random.nextInt(1000)));
+        trade.put("wasRejected", false);
+        trade.put("marketValueEligible", false);
+        trade.put("cmtaExecutorId", Integer.toString(random.nextInt(10000)));
+        trade.put("isGrouped", false);
+        trade.put("inputSource", "FIXML_REALTIME");
+        trade.put("allocationFlag", false);
+        trade.put("asOfDate", "2023-11-20");
+        trade.put("typeOfTrade", "REGULAR");
+        trade.put("destinationAccount", Integer.toString(random.nextInt(1000)));
+        trade.put("tradeId", Integer.toString(random.nextInt(100000)));
+        trade.put("status", "ACTIVE");
+        trade.put("key", UUID.randomUUID().toString());
+
+        return trade;
+    }
+
+    private static JsonObject createFilterKeys(Random random) {
+        JsonObject filterKeys = JsonObject.create();
+        filterKeys.put("nonClearedStructureKey", "0");
+        filterKeys.put("productStructureKey", "144396836679974912");
+        return filterKeys;
+    }
+
+    private static JsonObject createInstrumentKey(Random random) {
+        JsonObject instrumentKey = JsonObject.create();
+        instrumentKey.put("id", Integer.toString(random.nextInt(100000)));
+        return instrumentKey;
     }
 }
 
