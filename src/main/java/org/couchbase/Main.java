@@ -4,9 +4,12 @@ import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.GetResult;
 import reactor.core.publisher.Flux;
 import com.couchbase.client.java.kv.MutationResult;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import com.couchbase.client.java.Collection;
+import reactor.core.publisher.Mono;
 
 
 /**
@@ -39,30 +42,6 @@ public class Main {
         CouchbaseConfig.getCluster().disconnect();
     }
 
-   private static void simulateBusinessTransaction(BusinessTransactionData businessTransaction) {
-        performDBOperation(businessTransaction.getDbDeal().getString("key"), businessTransaction.getDbDeal());
-        performDBOperation(businessTransaction.getTrades().getTradeId(), businessTransaction.getTrades().getTrade());
-        performDBOperation(businessTransaction.getTrades().getInstrumentKey(), businessTransaction.getPosition());
-        performDBOperation(businessTransaction.getTrades().getInstrumentKey(), businessTransaction.getOpenInterest());
-        performDBOperation(businessTransaction.getFwDbMsgDbSeq().getString("key"), businessTransaction.getFwDbMsgDbSeq());
-        performDBOperation(businessTransaction.getMultiAssetTransactionLog().getString("key"), businessTransaction.getMultiAssetTransactionLog());
-        performDBOperation(businessTransaction.getHighestMultiAssetTransactionLog().getString("key"), businessTransaction.getHighestMultiAssetTransactionLog());
-        performDBOperation(businessTransaction.getDbLatestTxnIdForTrades().getString("key"), businessTransaction.getDbLatestTxnIdForTrades());
-        performDBOperation(businessTransaction.getFwDbMsgqOutSeq().getString("key"), businessTransaction.getFwDbMsgqOutSeq());
-    }
-
-/*    private static void performDBOperation(String key, JsonObject jsonObject) {
-        collection.upsert(key, jsonObject);
-        collection.get(key);
-    }*/
-
-    private static void performDBOperation(String key, JsonObject jsonObject) {
-        collection.reactive().upsert(key, jsonObject)
-                .flatMap(result -> collection.reactive().get(key))
-                .doOnError(e -> System.err.println("Error occurred: " + e.getMessage()))
-                .block();  // Wait for the operation to complete
-    }
-
     private static BusinessTransactionData generateMockDataForBusinessTransaction() {
         BusinessTransactionData mockData = new BusinessTransactionData();
         mockData.setDbDeal(BusinessTransactionJsonGenerator.generateDBDealJSONData());
@@ -78,7 +57,30 @@ public class Main {
         return mockData;
     }
 
-    private static List<MutationResult> simulateMultipleDbDeals(List<JsonObject> data) {
+    private static void simulateBusinessTransaction(BusinessTransactionData businessTransaction) {
+        List<Mono<GetResult>> operations = new ArrayList<>();
+
+        operations.add(performDBOperation(businessTransaction.getDbDeal().getString("key"), businessTransaction.getDbDeal()));
+        operations.add(performDBOperation(businessTransaction.getTrades().getTradeId(), businessTransaction.getTrades().getTrade()));
+        operations.add(performDBOperation(businessTransaction.getTrades().getInstrumentKey(), businessTransaction.getPosition()));
+        operations.add(performDBOperation(businessTransaction.getTrades().getInstrumentKey(), businessTransaction.getOpenInterest()));
+        operations.add(performDBOperation(businessTransaction.getFwDbMsgDbSeq().getString("key"), businessTransaction.getFwDbMsgDbSeq()));
+        operations.add(performDBOperation(businessTransaction.getMultiAssetTransactionLog().getString("key"), businessTransaction.getMultiAssetTransactionLog()));
+        operations.add(performDBOperation(businessTransaction.getHighestMultiAssetTransactionLog().getString("key"), businessTransaction.getHighestMultiAssetTransactionLog()));
+        operations.add(performDBOperation(businessTransaction.getDbLatestTxnIdForTrades().getString("key"), businessTransaction.getDbLatestTxnIdForTrades()));
+        operations.add(performDBOperation(businessTransaction.getFwDbMsgqOutSeq().getString("key"), businessTransaction.getFwDbMsgqOutSeq()));
+
+        Flux.merge(operations).blockLast();  // Wait for all operations to complete
+        //Flux.concat(operations).blockLast();
+    }
+
+    private static Mono<GetResult> performDBOperation(String key, JsonObject jsonObject) {
+        return collection.reactive().upsert(key, jsonObject)
+                .flatMap(result -> collection.reactive().get(key))
+                .doOnError(e -> System.err.println("Error occurred: " + e.getMessage()));
+    }
+
+/*    private static List<MutationResult> simulateMultipleDbDeals(List<JsonObject> data) {
 
         return Flux.fromIterable(data)
                 .flatMap(doc -> collection.reactive().upsert(doc.getString("key"),doc))
@@ -95,6 +97,6 @@ public class Main {
                 .doOnError(e -> Flux.empty())
                 .collectList()
                 .block();
-    }
+    }*/
 }
 
