@@ -19,7 +19,7 @@ import com.couchbase.client.java.Collection;
 
 
 /**
- * This class demonstrates how to perform multiple key-value inserts and reads within a single transaction using Couchbase Java SDK.
+ * This class demonstrates how to perform multiple key-value inserts and reads using Couchbase Java SDK.
  */
 public class Main {
 //Capella Connection
@@ -56,23 +56,51 @@ public class Main {
     }
 
     public static void main(String[] args) {
+
+ /*       // Multiple inserts test using reactive APIs
+        long startTime = System.currentTimeMillis();
         List<JsonObject> data = generateDBDealDataListOfDocuments();
+        List<MutationResult> result = simulateMultipleDbDeals(data);*/
 
         // Capture the start time
         long startTime = System.currentTimeMillis();
 
-        // Multiple inserts test
-        // List<MutationResult> result = simulateMultipleDbDeals(data);
-
-        // Simulate transactions for DbDeal
+        // Simulate writes for DbDeal
         JsonObject dbDeal = generateDBDealJSONData();
-        collection.upsert(dbDeal.getString("key"),dbDeal);
+        String dbDealKey = dbDeal.getString("key");
+        collection.upsert(dbDealKey,dbDeal);
 
         // Simulate reads for DbDeal
-        JsonObject resultDbDeal = collection.get(dbDeal.getString("key")).contentAsObject();
-        System.out.println("Read DbDeal with Key: " + resultDbDeal.getString("key"));
+        collection.get(dbDealKey);
+//      System.out.println("Read DbDeal with Key: " + resultDbDeal.getString("key"));
 
+        // Simulate writes for Trades
+        TradeData trades = generateTradeJSONData(dbDealKey);
+        collection.upsert(trades.getTradeId(),trades.getTrade());
 
+        // Simulate reads for Trades
+        collection.get(trades.getTradeId());
+
+        // Simulate writes for Positions
+        JsonObject position = generatePositionJSONData(trades);
+        collection.upsert(trades.getInstrumentKey(),position);
+
+        // Simulate reads for Positions
+        collection.get(trades.getInstrumentKey());
+
+        // Simulate writes for OpenInterest
+        JsonObject openInterest = generateOpenInterestJSONObject(trades);
+        collection.upsert(trades.getInstrumentKey(),openInterest);
+
+        // Simulate reads for openInterest
+        collection.get(trades.getInstrumentKey());
+
+        // Simulate writes for FwDbMsgqOutSeq
+        JsonObject fwDbMsgqOutSeq = createFwDbMsgqOutSeqJsonObject();
+        collection.upsert(fwDbMsgqOutSeq.getString("key"),fwDbMsgqOutSeq);
+
+        // Simulate reads for openInterest
+        collection.get(fwDbMsgqOutSeq.getString("key"));
 
         // Capture the end time
         long endTime = System.currentTimeMillis();
@@ -106,7 +134,7 @@ public class Main {
 
     private static JsonObject generateDBDealJSONData() {
         Random random = new Random();
-
+        String dbDealId = Integer.toString(random.nextInt(100000));
         JsonObject jsonData = JsonObject.create();
 
         jsonData.put("action", "CREATE");
@@ -114,7 +142,7 @@ public class Main {
 
         JsonObject entity = JsonObject.create();
         entity.put("sellTradeId", "49151749");
-        entity.put("dealId", "24325637");
+        entity.put("dealId", dbDealId);
 
         // Mocking "buy" section
         JsonObject buy = JsonObject.create();
@@ -167,8 +195,7 @@ public class Main {
         entity.put("status", "ACTIVE");
 
         jsonData.put("entity", entity);
-//        jsonData.put("key", "24325637");
-        jsonData.put("key", UUID.randomUUID().toString());
+        jsonData.put("key", dbDealId);
         return jsonData;
     }
 
@@ -196,9 +223,12 @@ public class Main {
     }
 
     // Trades object
-    private static JsonObject generateTradeJSONData() {
+    private static TradeData generateTradeJSONData(String dbDealKey) {
         Random random = new Random();
         JsonObject trade = JsonObject.create();
+        String sequenceNumber = Integer.toString(random.nextInt(100000));
+        String tradeId = Integer.toString(random.nextInt(100000));
+        String instrumentKey = Integer.toString(random.nextInt(100000));
 
         trade.put("remainingQuantity", Integer.toString(random.nextInt(100)));
         trade.put("reason", "TRADE");
@@ -226,7 +256,7 @@ public class Main {
         trade.put("tradeBusinessDate", "2018-02-01");
         trade.put("timestamp", Instant.now().toString());
         trade.put("previouslyReported", false);
-        trade.put("sequenceNumber", Integer.toString(random.nextInt(100000)));
+        trade.put("sequenceNumber", sequenceNumber);
         trade.put("cmtaExecutor", Integer.toString(random.nextInt(10000)));
         trade.put("moveTradeIds", JsonArray.create());
         trade.put("cmtaFlag", true);
@@ -238,8 +268,8 @@ public class Main {
         JsonObject immutableTradeAttributes = JsonObject.create();
         immutableTradeAttributes.put("isBuy", random.nextBoolean());
         immutableTradeAttributes.put("filterKeys", createFilterKeys(random));
-        immutableTradeAttributes.put("instrumentKey", createInstrumentKey(random));
-        immutableTradeAttributes.put("dealId", Integer.toString(random.nextInt(100000)));
+        immutableTradeAttributes.put("instrumentKey", instrumentKey);
+        immutableTradeAttributes.put("dealId", dbDealKey);
         immutableTradeAttributes.put("tradeSourceId", "6");
         immutableTradeAttributes.put("clientDealId", Long.toString(random.nextLong()));
         immutableTradeAttributes.put("user", "RTC_SUPER");
@@ -261,11 +291,11 @@ public class Main {
         trade.put("asOfDate", "2023-11-20");
         trade.put("typeOfTrade", "REGULAR");
         trade.put("destinationAccount", Integer.toString(random.nextInt(1000)));
-        trade.put("tradeId", Integer.toString(random.nextInt(100000)));
+        trade.put("tradeId", tradeId);
         trade.put("status", "ACTIVE");
-        trade.put("key", UUID.randomUUID().toString());
+        trade.put("key", tradeId);
 
-        return trade;
+        return new TradeData(sequenceNumber, tradeId, trade, instrumentKey);
     }
 
     private static JsonObject createFilterKeys(Random random) {
@@ -275,10 +305,149 @@ public class Main {
         return filterKeys;
     }
 
-    private static JsonObject createInstrumentKey(Random random) {
-        JsonObject instrumentKey = JsonObject.create();
-        instrumentKey.put("id", Integer.toString(random.nextInt(100000)));
+    private static JsonObject generatePositionJSONData(TradeData tradeData) {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+
+        jsonObject.put("action", "CREATE");
+        jsonObject.put("collection", "POSITIONS");
+
+        JsonObject entity = JsonObject.create();
+        entity.put("reason", "TRADE");
+        entity.put("accountFilterKey", JsonObject.create().put("accountStructureKey", "72104873037987841"));
+        entity.put("t1Premium", "-495000.00");
+        entity.put("t2Premium", "0");
+        entity.put("initializeDate", 0);
+        entity.put("shortExcessQuantity", "0");
+
+        JsonObject instrumentSpecificPosition = JsonObject.create().put("$type", "InstrumentSpecificPosition");
+        JsonObject position = JsonObject.create()
+                .put("instrumentSpecificPosition", instrumentSpecificPosition)
+                .put("quantity", "0")
+                .put("marketValue", "0")
+                .put("initialValue", "0");
+
+        entity.put("longStartOfDayPosition", position);
+        entity.put("previousLongStartOfDayPosition", position);
+        entity.put("shortPosition", position);
+        entity.put("positionBeforeCorporateActionUpdate", JsonArray.create());
+        entity.put("hasEthPosition", false);
+
+        JsonObject longPosition = JsonObject.create()
+                .put("instrumentSpecificPosition", instrumentSpecificPosition)
+                .put("quantity", "50")
+                .put("marketValue", "0")
+                .put("initialValue", "0");
+        entity.put("longPosition", longPosition);
+        entity.put("previousShortStartOfDayPosition", position);
+
+        JsonObject filterKeys = JsonObject.create()
+                .put("nonClearedStructureKey", "0")
+                .put("productStructureKey", "144396836679974912");
+        entity.put("filterKeys", filterKeys);
+
+        entity.put("posKeep", "GROSS");
+        entity.put("sodShortMarketValueDelta", "0");
+        entity.put("standardIntentionQuantity", "0");
+
+        JsonObject buckets = JsonObject.create()
+                .put("assignments", position)
+                .put("sellOpen", position)
+                .put("exercises", position)
+                .put("sellClose", position)
+                .put("buyOpen", longPosition)
+                .put("buyClose", position)
+                .put("openUpCloseOutTransactions", JsonArray.create());
+        entity.put("buckets", buckets);
+
+        entity.put("shortStartOfDayPosition", position);
+        entity.put("$type", "DbPosition");
+        entity.put("finalizeDate", 0);
+        entity.put("mergeDate", 0);
+        entity.put("sodLongMarketValueDelta", "0");
+
+        JsonObject positionKey = JsonObject.create()
+                .put("date", -1)
+                .put("subId", "-1")
+                .put("accountId", "71")
+                .put("instrumentKey", tradeData.getInstrumentKey());
+        entity.put("positionKey", positionKey);
+
+        entity.put("longExcessQuantity", "0");
+        entity.put("tradeId", tradeData.getTradeId());
+
+        jsonObject.put("entity", entity);
+
+        JsonObject key = JsonObject.create()
+                .put("date", -1)
+                .put("subId", "-1")
+                .put("accountId", "71")
+                .put("instrumentKey", tradeData.getInstrumentKey());
+        jsonObject.put("key", key);
+
+        return jsonObject;
+    }
+
+    private static JsonObject generateOpenInterestJSONObject(TradeData tradeData) {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+
+        jsonObject.put("action", "UPDATE");
+        jsonObject.put("collection", "DbOpenInterest");
+        jsonObject.put("previousTransactionId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("sequenceNumber", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("productKeyId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("openInterest", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("tradableInstrument", tradeData.getInstrumentKey());
+        jsonObject.put("ethOpenInterest", "0");
+        jsonObject.put("$type", "DbOpenInterest");
+        jsonObject.put("key", tradeData.getInstrumentKey());
+
+        return jsonObject;
+    }
+
+    private static JsonObject createFwDbMsgqOutSeqJsonObject() {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+
+        jsonObject.put("action", "UPDATE");
+        jsonObject.put("collection", "FwDbMsgqOutSeq");
+        jsonObject.put("previousTransactionId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("queueId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("associatedTxSequence", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("queueSequence", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("$type", "FwDbQueueOutSequence");
+        jsonObject.put("key", Integer.toString(random.nextInt(10000)));
+
+        return jsonObject;
+    }
+}
+ class TradeData {
+    private String sequenceNumber;
+    private String tradeId;
+    private JsonObject trade;
+    private String instrumentKey;
+
+    public TradeData(String sequenceNumber, String tradeId, JsonObject trade, String instrumentKey) {
+        this.sequenceNumber = sequenceNumber;
+        this.tradeId = tradeId;
+        this.trade = trade;
+        this.instrumentKey = instrumentKey;
+    }
+
+    public String getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    public String getTradeId() {
+        return tradeId;
+    }
+
+    public JsonObject getTrade() {
+        return trade;
+    }
+
+    public String getInstrumentKey() {
         return instrumentKey;
     }
 }
-
