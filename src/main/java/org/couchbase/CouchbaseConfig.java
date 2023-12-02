@@ -12,10 +12,10 @@ public class CouchbaseConfig {
     private static final String PASSWORD = "Password@P1";*/
 
     // AWS connection
-    private static final String CONNECTION_STRING = "couchbase://ec2-3-143-153-43.us-east-2.compute.amazonaws.com";
+//    private static final String CONNECTION_STRING = "couchbase://ec2-3-143-153-43.us-east-2.compute.amazonaws.com";
 
     //Local connection
-//    private static final String CONNECTION_STRING = "couchbase://localhost";
+    private static final String CONNECTION_STRING = "couchbase://localhost";
     private static final String USERNAME = "Administrator";
     private static final String PASSWORD = "password";
     private static final String BUCKET = "occ";

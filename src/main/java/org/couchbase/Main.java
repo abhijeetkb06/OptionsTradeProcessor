@@ -11,7 +11,6 @@ import java.util.List;
 import com.couchbase.client.java.Collection;
 import reactor.core.publisher.Mono;
 
-
 /**
  * This class simulates business transaction using multiple key-value inserts and reads using Couchbase Java SDK.
  */
@@ -20,10 +19,10 @@ public class Main {
     private static final Collection collection = CouchbaseConfig.getCollection();
     public static void main(String[] args) {
 
-       /* // Multiple inserts test using reactive APIs
+        // Multiple inserts test using reactive APIs
+  /*      List<JsonObject> data = generateDBDealDataListOfDocuments();
         long startTime = System.currentTimeMillis();
-        List<JsonObject> data = generateDBDealDataListOfDocuments();
-        List<MutationResult> result = simulateMultipleDbDeals(data);*/
+        simulateMultipleDbDeals(data);*/
 
         BusinessTransactionData businessTransaction = generateMockDataForBusinessTransaction();
 
@@ -80,14 +79,10 @@ public class Main {
                 .doOnError(e -> System.err.println("Error occurred: " + e.getMessage()));
     }
 
-/*    private static List<MutationResult> simulateMultipleDbDeals(List<JsonObject> data) {
-
-        return Flux.fromIterable(data)
-                .flatMap(doc -> collection.reactive().upsert(doc.getString("key"),doc))
-                .doOnError(e -> Flux.empty())
-                .collectList()
-                .block();
-
+/*    private static void simulateMultipleDbDeals(List<JsonObject> data) {
+        Flux.fromIterable(data)
+                .flatMap(doc -> collection.reactive().upsert(doc.getString("key"), doc))
+                .blockLast();  // Wait for all operations to complete
     }
 
     public static List<JsonObject> generateDBDealDataListOfDocuments() {
