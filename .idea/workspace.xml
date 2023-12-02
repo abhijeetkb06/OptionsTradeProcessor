@@ -86,7 +86,7 @@
       <workItem from="1701133327198" duration="42000" />
       <workItem from="1701140731292" duration="39087000" />
       <workItem from="1701449467261" duration="2469000" />
-      <workItem from="1701473158916" duration="7395000" />
+      <workItem from="1701473158916" duration="8725000" />
     </task>
     <servers />
   </component>
@@ -98,7 +98,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/org/couchbase/Main.java</url>
-          <line>182</line>
+          <line>208</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

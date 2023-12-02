@@ -10,10 +10,8 @@ import com.couchbase.client.java.kv.MutationResult;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import com.couchbase.client.java.Collection;
 
@@ -95,11 +93,39 @@ public class Main {
         // Simulate reads for openInterest
         collection.get(trades.getInstrumentKey());
 
+        // Simulate writes for fwDbMsgDbSeq
+        JsonObject fwDbMsgDbSeq =  generateFwDbXSeqJsonObject();
+        collection.upsert(fwDbMsgDbSeq.getString("key"),fwDbMsgDbSeq);
+
+        // Simulate reads for fwDbMsgDbSeq
+        collection.get(fwDbMsgDbSeq.getString("key"));
+
+        // Simulate writes for multiAssetTransactionLog
+        JsonObject multiAssetTransactionLog =  generateMultiAssetTransactionLogJsonObject();
+        collection.upsert(multiAssetTransactionLog.getString("key"),multiAssetTransactionLog);
+
+        // Simulate reads for multiAssetTransactionLog
+        collection.get(multiAssetTransactionLog.getString("key"));
+
+        // Simulate writes for highestMultiAssetTransactionLog
+        JsonObject highestMultiAssetTransactionLog =  generateHighestMultiAssetTransactionLogJsonObject();
+        collection.upsert(highestMultiAssetTransactionLog.getString("key"),highestMultiAssetTransactionLog);
+
+        // Simulate reads for highestMultiAssetTransactionLog
+        collection.get(highestMultiAssetTransactionLog.getString("key"));
+
+        // Simulate writes for DbLatestTxnIdForTrades
+        JsonObject dbLatestTxnIdForTrades =  generateDbLatestTxnIdForTradesJsonObject();
+        collection.upsert(dbLatestTxnIdForTrades.getString("key"),dbLatestTxnIdForTrades);
+
+        // Simulate reads for DbLatestTxnIdForTrades
+        collection.get(dbLatestTxnIdForTrades.getString("key"));
+
         // Simulate writes for FwDbMsgqOutSeq
-        JsonObject fwDbMsgqOutSeq = createFwDbMsgqOutSeqJsonObject();
+        JsonObject fwDbMsgqOutSeq = generateFwDbMsgqOutSeqJsonObject();
         collection.upsert(fwDbMsgqOutSeq.getString("key"),fwDbMsgqOutSeq);
 
-        // Simulate reads for openInterest
+        // Simulate reads for FwDbMsgqOutSeq
         collection.get(fwDbMsgqOutSeq.getString("key"));
 
         // Capture the end time
@@ -406,7 +432,62 @@ public class Main {
         return jsonObject;
     }
 
-    private static JsonObject createFwDbMsgqOutSeqJsonObject() {
+    private static JsonObject generateFwDbXSeqJsonObject() {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+        jsonObject.put("action", "UPDATE");
+        jsonObject.put("collection", "FwDbXSeq");
+        jsonObject.put("previousTransactionId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("journalId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("journalSequence", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("journalTimestamp", "1700544827855990801");
+        jsonObject.put("$type", "XJournalSequence");
+        jsonObject.put("key", Integer.toString(random.nextInt(10000)));
+
+        return jsonObject;
+    }
+
+    private static JsonObject generateMultiAssetTransactionLogJsonObject() {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+
+        jsonObject.put("action", "CREATE");
+        jsonObject.put("collection", "MultiAssetTransactionLogs");
+        jsonObject.put("$type", "DbMultiAssetTransactionLog");
+        jsonObject.put("timestamp", "2023-11-21 05:33:47.855");
+        jsonObject.put("txnId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("key", Integer.toString(random.nextInt(10000)));
+
+        return jsonObject;
+    }
+
+    private static JsonObject generateHighestMultiAssetTransactionLogJsonObject() {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+        jsonObject.put("action", "UPDATE");
+        jsonObject.put("collection", "HighestMultiAssetTransactionLogs");
+        jsonObject.put("previousTransactionId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("key", "com.cinnober.position.event.protocol.position.ActualPositionEvent");
+        jsonObject.put("$type", "DbMultiAssetHighestTransactionLog");
+        jsonObject.put("txnId", "24325637");
+
+        return jsonObject;
+    }
+
+    private static JsonObject generateDbLatestTxnIdForTradesJsonObject() {
+        JsonObject jsonObject = JsonObject.create();
+        Random random = new Random();
+        jsonObject.put("action", "UPDATE");
+        jsonObject.put("collection", "DbLatestTxnIdForTrades");
+        jsonObject.put("previousTransactionId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("latestTxnId", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("key", Integer.toString(random.nextInt(10000)));
+        jsonObject.put("$type", "DbLatestTxnIdForTrades");
+
+        return jsonObject;
+    }
+
+    private static JsonObject generateFwDbMsgqOutSeqJsonObject() {
         JsonObject jsonObject = JsonObject.create();
         Random random = new Random();
 
