@@ -1,27 +1,23 @@
 package org.couchbase;
 
-import com.couchbase.client.java.*;
 import com.couchbase.client.java.json.JsonObject;
+import com.couchbase.client.java.kv.GetResult;
 import reactor.core.publisher.Flux;
-
-import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.kv.MutationResult;
-
-import java.time.Duration;
 import java.util.List;
 
 import com.couchbase.client.java.Collection;
 
 
 /**
- * This class demonstrates how to perform multiple key-value inserts and reads using Couchbase Java SDK.
+ * This class simulates business transaction using multiple key-value inserts and reads using Couchbase Java SDK.
  */
 public class Main {
 
     private static final Collection collection = CouchbaseConfig.getCollection();
     public static void main(String[] args) {
 
- /*       // Multiple inserts test using reactive APIs
+       /* // Multiple inserts test using reactive APIs
         long startTime = System.currentTimeMillis();
         List<JsonObject> data = generateDBDealDataListOfDocuments();
         List<MutationResult> result = simulateMultipleDbDeals(data);*/
@@ -30,7 +26,6 @@ public class Main {
 
         // Capture the start time
         long startTime = System.currentTimeMillis();
-
         simulateBusinessTransaction(businessTransaction);
 
         // Capture the end time
@@ -44,7 +39,7 @@ public class Main {
         CouchbaseConfig.getCluster().disconnect();
     }
 
-    private static void simulateBusinessTransaction(BusinessTransactionData businessTransaction) {
+   private static void simulateBusinessTransaction(BusinessTransactionData businessTransaction) {
         performDBOperation(businessTransaction.getDbDeal().getString("key"), businessTransaction.getDbDeal());
         performDBOperation(businessTransaction.getTrades().getTradeId(), businessTransaction.getTrades().getTrade());
         performDBOperation(businessTransaction.getTrades().getInstrumentKey(), businessTransaction.getPosition());
@@ -56,9 +51,16 @@ public class Main {
         performDBOperation(businessTransaction.getFwDbMsgqOutSeq().getString("key"), businessTransaction.getFwDbMsgqOutSeq());
     }
 
-    private static void performDBOperation(String key, JsonObject jsonObject) {
+/*    private static void performDBOperation(String key, JsonObject jsonObject) {
         collection.upsert(key, jsonObject);
         collection.get(key);
+    }*/
+
+    private static void performDBOperation(String key, JsonObject jsonObject) {
+        collection.reactive().upsert(key, jsonObject)
+                .flatMap(result -> collection.reactive().get(key))
+                .doOnError(e -> System.err.println("Error occurred: " + e.getMessage()))
+                .block();  // Wait for the operation to complete
     }
 
     private static BusinessTransactionData generateMockDataForBusinessTransaction() {
