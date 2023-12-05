@@ -7,6 +7,8 @@ import com.couchbase.client.java.kv.MutationResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.couchbase.client.java.Collection;
 import reactor.core.publisher.Mono;

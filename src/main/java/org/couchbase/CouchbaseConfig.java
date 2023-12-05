@@ -3,6 +3,8 @@ package org.couchbase;
 import com.couchbase.client.java.*;
 
 import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CouchbaseConfig {
 
@@ -27,6 +29,9 @@ public class CouchbaseConfig {
     private static final Collection collection;
 
     static {
+        // Turn off couchbase Logging
+        Logger rootLogger = Logger.getLogger("com.couchbase");
+        rootLogger.setLevel(Level.OFF);
         cluster = Cluster.connect(
                 CONNECTION_STRING,
                 ClusterOptions.clusterOptions(USERNAME, PASSWORD).environment(env -> {
