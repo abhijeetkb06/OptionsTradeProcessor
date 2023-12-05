@@ -37,7 +37,7 @@ public class Main {
 
         // Calculate and print the elapsed time
         long elapsedTime = endTime - startTime;
-        System.out.println("Total time taken: " + elapsedTime + " milliseconds");
+        System.out.println("Total time taken for this Business Transaction: " + elapsedTime + " milliseconds");
 
         // Close the connection to the Couchbase cluster
         CouchbaseConfig.getCluster().disconnect();
@@ -72,7 +72,7 @@ public class Main {
         operations.add(performDBOperation(businessTransaction.getFwDbMsgqOutSeq().getString("key"), businessTransaction.getFwDbMsgqOutSeq()));
 
         Flux.merge(operations).blockLast();  // Wait for all operations to complete
-        //Flux.concat(operations).blockLast();
+        //Flux.concat(operations).blockLast(); //  To maintain the order of operations
     }
 
     private static Mono<GetResult> performDBOperation(String key, JsonObject jsonObject) {
@@ -84,6 +84,7 @@ public class Main {
 /*    private static void simulateMultipleDbDeals(List<JsonObject> data) {
         Flux.fromIterable(data)
                 .flatMap(doc -> collection.reactive().upsert(doc.getString("key"), doc))
+                //.concatMap(doc -> collection.reactive().upsert(doc.getString("key"), doc)) // To maintain the order of operations
                 .blockLast();  // Wait for all operations to complete
     }
 

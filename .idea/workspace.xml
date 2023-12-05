@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="e1535b66-78e6-4972-89c4-4eafd9ba5296" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/couchbase/CouchbaseConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/couchbase/CouchbaseConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/couchbase/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/couchbase/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -93,7 +92,8 @@
       <workItem from="1701615183030" duration="1551000" />
       <workItem from="1701712614178" duration="45000" />
       <workItem from="1701712667798" duration="756000" />
-      <workItem from="1701819693433" duration="526000" />
+      <workItem from="1701819693433" duration="644000" />
+      <workItem from="1701820433234" duration="81000" />
     </task>
     <servers />
   </component>
