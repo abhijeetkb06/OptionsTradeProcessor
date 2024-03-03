@@ -22,7 +22,7 @@ public class Main {
     public static void main(String[] args) {
 
         // Multiple inserts test using reactive APIs
-  /*      List<JsonObject> data = generateDBDealDataListOfDocuments();
+   /*     List<JsonObject> data = generateDBDealDataListOfDocuments();
         long startTime = System.currentTimeMillis();
         simulateMultipleDbDeals(data);*/
 
@@ -72,7 +72,7 @@ public class Main {
         operations.add(performDBOperation(businessTransaction.getFwDbMsgqOutSeq().getString("key"), businessTransaction.getFwDbMsgqOutSeq()));
 
         Flux.merge(operations).blockLast();  // Wait for all operations to complete
-        //Flux.concat(operations).blockLast(); //  To maintain the order of operations
+//        Flux.concat(operations).blockLast(); //  To maintain the order of operations
     }
 
     private static Mono<GetResult> performDBOperation(String key, JsonObject jsonObject) {

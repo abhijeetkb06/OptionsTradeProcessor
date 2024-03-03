@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e1535b66-78e6-4972-89c4-4eafd9ba5296" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/couchbase/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/couchbase/Main.java" afterDir="false" />
     </list>
@@ -34,15 +35,18 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.github.copilot.settings.ApplicationConfigurable&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -94,6 +98,16 @@
       <workItem from="1701712667798" duration="756000" />
       <workItem from="1701819693433" duration="644000" />
       <workItem from="1701820433234" duration="81000" />
+      <workItem from="1702009011912" duration="189000" />
+      <workItem from="1702009348599" duration="50000" />
+      <workItem from="1702050707381" duration="1915000" />
+      <workItem from="1703987396975" duration="103000" />
+      <workItem from="1705679890074" duration="263000" />
+      <workItem from="1705680195707" duration="908000" />
+      <workItem from="1705681117297" duration="1362000" />
+      <workItem from="1705761436442" duration="2089000" />
+      <workItem from="1706041812706" duration="2916000" />
+      <workItem from="1707164756138" duration="24000" />
     </task>
     <servers />
   </component>
